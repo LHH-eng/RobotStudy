@@ -12,25 +12,42 @@ public class LineComparison : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        float x;
-        float y;
-        float z;
 
-        Vector3 point = new Vector3(x, y, z);
+        //Vector3 point = new Vector3(x, y, z);
 
+        Vector3 p1 = new Vector3(2, 1, 1);
+        Vector3 p2 = new Vector3(6, 1, 1);
+        Vector3 p3 = new Vector3(7, 1, 1);
+        Vector3 p4 = new Vector3(9, 1, 1);
 
         // 1. p1.x / p2.x = T -> T값 확인 후 2단계로 
-
         // 2. p1.y / p2.y = T -> true -> 3단계로 
         //                    -> false -> 다른선
         // 3. p1.y / p2.y = T -> true
         //                    -> false -> 다른선
 
-    }
+        Vector3 dirA = p1 - p2;
+        Vector3 dirB = p3 - p4;
+        Vector3 dirC = p1 - p3;
+        Vector3 crossStep1 = Vector3.Cross(dirA, dirB);
+        Vector3 crossStep2 = Vector3.Cross(dirA, dirC);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        if (crossStep1 == Vector3.zero && crossStep2 == Vector3.zero)
+        {
+            Debug.Log("같은선상!");
+
+        }
+
+        else
+        {
+            Debug.Log("다른선상!!!!");
+        }
+
+
+        // Update is called once per frame
+        //void Update()
+        //{
+
+        //}
     }
 }
