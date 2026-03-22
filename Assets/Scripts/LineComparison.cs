@@ -6,9 +6,16 @@ using UnityEngine;
 /// <summary>
 /// 카티아의 PrismaticJoint 기능을 유니티로 구현
 /// PrismaticJoint는 선과 선, 면과 면을 구속하여 직선 운동을 구현
-/// 1단계 - 선 비교
-/// 두 GameObject의 메시에서 버텍스(Point)를 추출하고, 버텍스로 모서리를 구성하여 같은 선상에 있는 모서리 쌍을 탐지하는 클래스
+/// 
+/// [선 & 선 비교]
+/// 두 GameObject의 메시에서 버텍스(Point)를 추출하고, 버텍스로 모서리를 구성하여
+/// 같은 선상에 있는 모서리 쌍을 탐지하는 기능
 /// 같은 선상 판단: 방향벡터 외적(Cross Product)이 (0,0,0)이면 같은 선상
+/// 
+/// [면 & 면 비교]
+/// 오브젝트 내부의 평행한 모서리 쌍을 추출하고, 두 오브젝트의 평행 쌍을 비교하여
+/// 같은 평면에 있는지 탐지하는 기능
+/// 같은 평면 판단: 평행한 모서리 쌍의 두 모서리가 모두 같은 선상에 있으면 같은 평면
 /// </summary>
 public class LineComparison : MonoBehaviour
 {
@@ -22,9 +29,33 @@ public class LineComparison : MonoBehaviour
         List<Vector3[]> edgesB = ExtractEdges(objB);
 
         CompareEdges(edgesA, edgesB);
+
+        List<(Vector3[], Vector3[])> parallelPairsA = ExtractParallelPairs(edgesA);
+        List<(Vector3[], Vector3[])> parallelPairsB = ExtractParallelPairs(edgesB);
+
+        ComparePlanes(parallelPairsA, parallelPairsB);
+
+        //Debug.Log($"A 평행쌍 수: {parallelPairsA.Count}");
+        //Debug.Log($"B 평행쌍 수: {parallelPairsB.Count}");
+
+        //for (int i = 0; i < parallelPairsA.Count; i++)
+        //{
+        //    Debug.Log($"A쌍[{i}]: {parallelPairsA[i].Item1[0]}→{parallelPairsA[i].Item1[1]} / {parallelPairsA[i].Item2[0]}→{parallelPairsA[i].Item2[1]}");
+        //}
+
+        //for (int i = 0; i < parallelPairsB.Count; i++)
+        //{
+        //    Debug.Log($"B쌍[{i}]: {parallelPairsB[i].Item1[0]}→{parallelPairsB[i].Item1[1]} / {parallelPairsB[i].Item2[0]}→{parallelPairsB[i].Item2[1]}");
+        //}
+
+
+
     }
 
+    //----------------------------------------------------------------------------------------------------------------------
+
     /// <summary>
+    /// [선 & 선] - 3단계
     /// 두 모서리 목록을 비교하여 같은 선상에 있는 모서리 쌍을 출력하는 메서드
     /// 같은 선상인 쌍이 없으면 "같은 선상인 모서리 없음" 출력
     /// </summary>
@@ -53,11 +84,14 @@ public class LineComparison : MonoBehaviour
 
         if (!found)
         {
-            Debug.Log("같은 선상인 모서리 없음");
+            Debug.Log("다른 선!!!");
         }
     }
 
+    //----------------------------------------------------------------------------------------------------------------------
+
     /// <summary>
+    /// [선 & 선] - 1단계
     /// GameObject의 메시에서 모서리 목록을 추출하는 메서드
     /// 버텍스 24개 → 월드좌표 변환 → 중복제거 8개 → 모서리 12개 추출
     /// </summary>
@@ -130,7 +164,10 @@ public class LineComparison : MonoBehaviour
         return edges;
     }
 
+    //----------------------------------------------------------------------------------------------------------------------
+
     /// <summary>
+    /// [선 & 선] - 2단계
     /// 두 선분이 같은 선상에 있는지 판단하는 메서드
     /// 외적(Cross Product)을 이용하여 방향 벡터가 평행한지 확인
     /// </summary>
@@ -169,6 +206,134 @@ public class LineComparison : MonoBehaviour
         {
             // Debug.Log("다른선상!!!!");
             return false;
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// [면 & 면] - 2단계
+    /// 두 선분이 평행인지 판단하는 메서드 (일치는 제외)
+    /// 외적(Cross Product)을 이용하여 방향 벡터가 평행한지 확인
+    /// </summary>
+    /// <param name="p1">A 선분의 시작점</param>
+    /// <param name="p2">A 선분의 끝점</param>
+    /// <param name="p3">B 선분의 시작점</param>
+    /// <param name="p4">B 선분의 끝점</param>
+    private static bool IsParallel(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+    {
+        // 1. A Line의 방향 벡터 구함
+        Vector3 dirA = p1 - p2;
+        // 2. B Line의 방향 벡터 구함
+        Vector3 dirB = p3 - p4;
+        // 3. A의 시작점 → B의 시작점 방향 벡터 구함
+        Vector3 dirC = p1 - p3;
+
+        // A Line과 B Line의 외적(Cross Product) 계산
+        // 두 방향 벡터가 평행하면 외적 결과가 (0,0,0)이 나옴
+        // (0,0,0)이면 두 선이 평행 or 일치, 아니면 교차 or 꼬인 관계
+        Vector3 crossStep1 = Vector3.Cross(dirA, dirB);
+        // A Line과 dirC의 외적 계산
+        // (0,0,0)이면 두 선이 일치, 아니면 평행 (다른 위치에 있음)
+        Vector3 crossStep2 = Vector3.Cross(dirA, dirC);
+
+        // crossStep1 = 0 : 두 선의 방향이 평행
+        // crossStep2 > Epsilon : 두 선이 일치하지 않음 (다른 위치에 있는 평행선)
+        // magnitude: 벡터의 크기(길이)
+        // Mathf.Epsilon: 부동소수점 오차 허용 범위 (약 0.000001)
+        if (crossStep1.magnitude < Mathf.Epsilon && crossStep2.magnitude > Mathf.Epsilon)
+        {
+            // Debug.Log($"평행! A: {p1} → {p2} / B: {p3} → {p4}");
+            return true;
+        }
+
+        else
+        {
+            // Debug.Log("평행 아님!!!!");
+            return false;
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// [면 & 면] - 1단계
+    /// 모서리 목록에서 같은 면에 속한 평행한 모서리 쌍을 추출하는 메서드
+    /// 같은 선상(일치)은 제외하고 평행한 쌍만 추출
+    /// 
+    /// 같은 면 판단 조건:
+    /// 두 모서리의 4개 점이 x, y, z 중 하나의 축값이 모두 동일해야 같은 면
+    /// ex) x=5.50 면: 4개 점의 x값이 모두 5.50
+    /// </summary>
+    /// <param name="edges">모서리 목록</param>
+    /// <returns>같은 면에 속한 평행한 모서리 쌍 목록 (각 쌍 = 모서리1, 모서리2 튜플)</returns>
+    List<(Vector3[], Vector3[])> ExtractParallelPairs(List<Vector3[]> edges)
+    {
+        // 평행한 모서리 쌍을 담을 튜플 리스트 생성
+        List<(Vector3[], Vector3[])> parallelPairs = new List<(Vector3[], Vector3[])>();
+
+        // 모서리 목록을 모든 쌍으로 비교 (중복 비교 방지: j = i+1 부터 시작)
+        for (int i = 0; i < edges.Count; i++)
+        {
+            for (int j = i + 1; j < edges.Count; j++)
+            {
+                // i번째 모서리와 j번째 모서리가 평행하고,
+                // 두 모서리가 같은 면에 있는지 확인 (x, y, z 중 하나의 축값이 4개 점 모두 동일해야 함)
+                if (IsParallel(edges[i][0], edges[i][1], edges[j][0], edges[j][1]) && 
+                    (edges[i][0].x == edges[i][1].x && edges[i][1].x == edges[j][0].x && edges[j][0].x == edges[j][1].x ||
+                    edges[i][0].y == edges[i][1].y && edges[i][1].y == edges[j][0].y && edges[j][0].y == edges[j][1].y ||
+                    edges[i][0].z == edges[i][1].z && edges[i][1].z == edges[j][0].z && edges[j][0].z == edges[j][1].z))
+                {
+                    parallelPairs.Add((edges[i], edges[j]));
+                }
+            }
+        }
+
+        return parallelPairs;
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// [면 & 면] - 3단계
+    /// 두 오브젝트의 평행한 모서리 쌍을 비교하여 같은 평면인지 판단하는 메서드
+    /// 
+    /// 같은 평면 판단 조건 (두 가지 경우):
+    /// 경우1: A쌍의 모서리1 == B쌍의 모서리1 (같은 선상) AND A쌍의 모서리2 == B쌍의 모서리2 (같은 선상)
+    /// 경우2: A쌍의 모서리1 == B쌍의 모서리2 (같은 선상) AND A쌍의 모서리2 == B쌍의 모서리1 (같은 선상)
+    /// → 순서에 상관없이 두 쌍의 모서리가 모두 같은 선상이면 같은 평면
+    /// </summary>
+    /// <param name="parallelPairsA">objA의 평행한 모서리 쌍 목록</param>
+    /// <param name="parallelPairsB">objB의 평행한 모서리 쌍 목록</param>
+    private static void ComparePlanes(List<(Vector3[], Vector3[])> parallelPairsA, List<(Vector3[], Vector3[])> parallelPairsB)
+    {
+        bool found = false;
+
+        // A의 평행한 모서리 쌍을 하나씩 순회
+        for (int i = 0; i < parallelPairsA.Count; i++)
+        {
+            // B의 평행한 모서리 쌍을 하나씩 순회
+            for (int j = 0; j < parallelPairsB.Count; j++)
+            {
+                // 두 가지 경우로 같은 평면 판단:
+                // 경우1: A모서리1 == B모서리1 (같은 선상) AND A모서리2 == B모서리2 (같은 선상)
+                // 경우2: A모서리1 == B모서리2 (같은 선상) AND A모서리2 == B모서리1 (같은 선상) ← 순서가 반대인 경우
+                if ((IsOnSameLine(parallelPairsA[i].Item1[0], parallelPairsA[i].Item1[1], parallelPairsB[j].Item1[0], parallelPairsB[j].Item1[1]) && 
+                     IsOnSameLine(parallelPairsA[i].Item2[0], parallelPairsA[i].Item2[1], parallelPairsB[j].Item2[0], parallelPairsB[j].Item2[1])) ||
+                     (IsOnSameLine(parallelPairsA[i].Item1[0], parallelPairsA[i].Item1[1], parallelPairsB[j].Item2[0], parallelPairsB[j].Item2[1]) &&
+                     IsOnSameLine(parallelPairsA[i].Item2[0], parallelPairsA[i].Item2[1], parallelPairsB[j].Item1[0], parallelPairsB[j].Item1[1])))
+                {
+                    found = true;
+
+                    Debug.Log("일치하는 평면!");
+
+                }
+            }
+        }
+
+        if (!found)
+        {
+            Debug.Log("떨어진 평면!!!!");
         }
     }
 }
