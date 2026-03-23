@@ -55,7 +55,7 @@ public class LineComparison : MonoBehaviour
     //----------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// [선 & 선] - 3단계
+    /// [선 & 선] - 2단계
     /// 두 모서리 목록을 비교하여 같은 선상에 있는 모서리 쌍을 출력하는 메서드
     /// 같은 선상인 쌍이 없으면 "같은 선상인 모서리 없음" 출력
     /// </summary>
@@ -167,7 +167,7 @@ public class LineComparison : MonoBehaviour
     //----------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// [선 & 선] - 2단계
+    /// [선 & 선] - 2단계_보조메서드
     /// 두 선분이 같은 선상에 있는지 판단하는 메서드
     /// 외적(Cross Product)을 이용하여 방향 벡터가 평행한지 확인
     /// </summary>
@@ -212,7 +212,7 @@ public class LineComparison : MonoBehaviour
     //----------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// [면 & 면] - 2단계
+    /// [면 & 면] - 1단계_보조메서드
     /// 두 선분이 평행인지 판단하는 메서드 (일치는 제외)
     /// 외적(Cross Product)을 이용하여 방향 벡터가 평행한지 확인
     /// </summary>
@@ -295,19 +295,23 @@ public class LineComparison : MonoBehaviour
     //----------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// [면 & 면] - 3단계
+    /// [면 & 면] - 2단계
     /// 두 오브젝트의 평행한 모서리 쌍을 비교하여 같은 평면인지 판단하는 메서드
     /// 
     /// 같은 평면 판단 조건 (두 가지 경우):
     /// 경우1: A쌍의 모서리1 == B쌍의 모서리1 (같은 선상) AND A쌍의 모서리2 == B쌍의 모서리2 (같은 선상)
     /// 경우2: A쌍의 모서리1 == B쌍의 모서리2 (같은 선상) AND A쌍의 모서리2 == B쌍의 모서리1 (같은 선상)
     /// → 순서에 상관없이 두 쌍의 모서리가 모두 같은 선상이면 같은 평면
+    /// 중복 출력 방지: HashSet으로 이미 찾은 면의 축값을 기록하여 중복 무시
     /// </summary>
     /// <param name="parallelPairsA">objA의 평행한 모서리 쌍 목록</param>
     /// <param name="parallelPairsB">objB의 평행한 모서리 쌍 목록</param>
     private static void ComparePlanes(List<(Vector3[], Vector3[])> parallelPairsA, List<(Vector3[], Vector3[])> parallelPairsB)
     {
         bool found = false;
+
+        // 이미 찾은 면을 기록하는 HashSet (축이름, 축값) - 중복 출력 방지
+        HashSet<(string, float)> foundPlanes = new HashSet<(string, float)>();
 
         // A의 평행한 모서리 쌍을 하나씩 순회
         for (int i = 0; i < parallelPairsA.Count; i++)
@@ -325,7 +329,16 @@ public class LineComparison : MonoBehaviour
                 {
                     found = true;
 
-                    Debug.Log("일치하는 평면!");
+                    // 일치하는 평면의 축값 추출 (어떤 축의 면인지 확인)
+                    (string, float) planeAxis = GetPlaneAxis(parallelPairsA[i]);
+
+                    // 이미 찾은 면이 아닐 때만 출력 (중복 방지)
+                    if (!foundPlanes.Contains(planeAxis))
+                    {
+                        // 새로운 면 → HashSet에 추가 후 출력
+                        foundPlanes.Add(planeAxis);
+                        Debug.Log($"일치하는 평면! 축: {planeAxis.Item1} = {planeAxis.Item2}");
+                    }
 
                 }
             }
@@ -335,5 +348,33 @@ public class LineComparison : MonoBehaviour
         {
             Debug.Log("떨어진 평면!!!!");
         }
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// [면 & 면] - 2단계_보조 메서드
+    /// 평행한 모서리 쌍을 받아서 어떤 축의 면인지 반환하는 메서드
+    /// 4개 점의 축값이 모두 동일한 축을 찾아 (축이름, 축값) 튜플로 반환
+    /// ex) x=5.50 면 → ("x", 5.50f)
+    /// </summary>
+    /// <param name="pair">평행한 모서리 쌍 (모서리1, 모서리2 튜플)</param>
+    /// <returns>(축이름, 축값) 튜플 / 해당 없으면 ("none", 0f)</returns>
+    private static (string, float) GetPlaneAxis((Vector3[], Vector3[]) pair)
+    {
+        Vector3 p = pair.Item1[0];  // 대표 점 하나 (축값 추출용)
+
+        // 4개 점의 x값이 모두 같으면 x축 수직면 (YZ평면)
+        if (pair.Item1[0].x == pair.Item1[1].x && pair.Item1[1].x == pair.Item2[0].x && pair.Item2[0].x == pair.Item2[1].x)
+            return ("x", p.x);
+        // 4개 점의 y값이 모두 같으면 y축 수직면 (XZ평면)
+        if (pair.Item1[0].y == pair.Item1[1].y && pair.Item1[1].y == pair.Item2[0].y && pair.Item2[0].y == pair.Item2[1].y)
+            return ("y", p.y);
+        // 4개 점의 z값이 모두 같으면 z축 수직면 (XY평면)
+        if (pair.Item1[0].z == pair.Item1[1].z && pair.Item1[1].z == pair.Item2[0].z && pair.Item2[0].z == pair.Item2[1].z)
+            return ("z", p.z);
+
+        // x, y, z 모두 해당 없을 때 기본값 반환
+        return ("none", 0f);
     }
 }
