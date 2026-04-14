@@ -6495,7 +6495,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1224632440}
         m_TargetAssemblyTypeName: InventoryPanelController, Assembly-CSharp
-        m_MethodName: ToggleInventoryPanel
+        m_MethodName: ToggleDashboard
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8941,7 +8941,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 409362374}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 942246877}
+        m_TargetAssemblyTypeName: NotificationController, Assembly-CSharp
+        m_MethodName: TogglePanel
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &409362374
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21305,6 +21317,7 @@ GameObject:
   m_Component:
   - component: {fileID: 942246875}
   - component: {fileID: 942246876}
+  - component: {fileID: 942246877}
   m_Layer: 5
   m_Name: TopRightPanel
   m_TagString: Untagged
@@ -21359,6 +21372,25 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &942246877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 942246874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1284f18b2378d984baa60fa7eedfacc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NotificationController
+  _notificationPanel: {fileID: 2140116381}
+  _badge: {fileID: 744680402}
+  _badgeText: {fileID: 85716905}
+  _closeBtn: {fileID: 1513364306}
+  _notificationRowPrefab: {fileID: 8099591636544090211, guid: fb191753acf382c45a3d9e0615205790, type: 3}
+  _content: {fileID: 1350164557}
+  _errorPopupController: {fileID: 1295968795}
 --- !u!1 &945404012
 GameObject:
   m_ObjectHideFlags: 0
@@ -29817,6 +29849,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1350164557}
+  - component: {fileID: 1350164559}
+  - component: {fileID: 1350164558}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -29841,8 +29875,48 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 600}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &1350164558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1350164556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
+--- !u!114 &1350164559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1350164556}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1350941945
 GameObject:
   m_ObjectHideFlags: 0
@@ -38269,8 +38343,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1346705983}
   m_HandleRect: {fileID: 1346705982}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.73
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
